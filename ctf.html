@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | Cyber Security Writeups & Research</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+    <div class="logo">CyberLabs</div>
+    <ul>
+        <li><a href="home.html">Home</a></li>
+        <li><a href="ctf.html" class="active">Blog</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+    </ul>
+</nav>
+
+<section class="content">
+    <div class="squares" aria-hidden="true">
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+        <div class="square"></div>
+    </div>
+
+    <h1 class="page-title">Security Research & CTF Writeups</h1>
+
+    <!-- Main Writeup Box -->
+    <div class="card">
+        <h3 class="writeup-title">VulnBox – Easy</h3>
+        <p><strong>Category:</strong> Web / Linux</p>
+        <p><strong>Difficulty:</strong> Easy</p>
+        <p><strong>Objective:</strong> Gain root access and capture the flag</p>
+        <p><strong>Skills Demonstrated:</strong> SQL Injection, File Upload Exploitation, Privilege Escalation</p>
+    </div>
+
+    <!-- Enumeration -->
+    <div class="card">
+        <h4>Enumeration</h4>
+        <p>The initial reconnaissance phase is critical for understanding the target environment:</p>
+        <ul>
+            <li>Identified the target IP and performed a comprehensive port scan using <code>nmap</code>.</li>
+            <li>Discovered port 22 (SSH) running OpenSSH and port 80 (HTTP) running Apache web server.</li>
+            <li>Chose to enumerate the web service running on port 80 as the initial attack vector.</li>
+            <li>Performed banner grabbing and service version detection for vulnerability research.</li>
+        </ul>
+    </div>
+
+    <!-- Web Enumeration -->
+    <div class="card">
+        <h4>Web Enumeration & Analysis</h4>
+        <p>Detailed examination of the web application revealed several security weaknesses:</p>
+        <ul>
+            <li>The website displayed a basic landing page with an unauthenticated login form.</li>
+            <li>Performed directory brute-forcing using <code>gobuster</code> and found <code>/admin</code>, <code>/uploads</code>, and <code>/api</code> endpoints.</li>
+            <li>The <code>/admin</code> directory contained a login authentication panel with no apparent protection mechanisms.</li>
+            <li>Identified potential SQL injection points in the login form through manual testing.</li>
+            <li>The application appeared to have minimal client-side validation and no Web Application Firewall (WAF).</li>
+        </ul>
+    </div>
+
+    <!-- SQL Injection -->
+    <div class="card">
+        <h4>Exploitation – SQL Injection Vulnerability</h4>
+        <p>The login form was vulnerable to SQL injection attacks, allowing authentication bypass:</p>
+        <ul>
+            <li>Tested the login form for SQL injection vulnerabilities by injecting common payloads like <code>' OR '1'='1</code>.</li>
+            <li>Successfully bypassed authentication using a basic authentication bypass payload: <code>admin' --</code>.</li>
+            <li>The vulnerable query was likely: <code>SELECT * FROM users WHERE username='admin' --' AND password='...'</code></li>
+            <li>Gained administrative access to the dashboard without requiring valid credentials.</li>
+            <li>Extracted user credentials and sensitive data from the exposed database.</li>
+        </ul>
+    </div>
+
+    <!-- File Upload -->
+    <div class="card">
+        <h4>File Upload Vulnerability – Remote Code Execution</h4>
+        <p>The admin dashboard contained an insecurely configured file upload feature:</p>
+        <ul>
+            <li>The admin dashboard contained an unrestricted file upload feature for "profile pictures".</li>
+            <li>Uploaded a malicious PHP shell disguised as an image file (<code>shell.php.jpg</code>).</li>
+            <li>Bypassed weak file type validation by manipulating MIME types and file extensions.</li>
+            <li>Located the uploaded file at <code>/uploads/shell.php.jpg</code> and triggered execution.</li>
+            <li>Obtained a reverse shell connection as the <code>www-data</code> user with web server privileges.</li>
+            <li>Established an interactive shell environment for further exploitation.</li>
+        </ul>
+    </div>
+
+    <!-- Shell Stabilization -->
+    <div class="card">
+        <h4>Shell Stabilization & Environment Hardening</h4>
+        <p>After obtaining initial shell access, I took steps to stabilize and improve the shell environment:</p>
+        <ul>
+            <li>Upgraded the shell from a basic reverse shell to a pseudo-terminal using Python: <code>python -c 'import pty; pty.spawn("/bin/bash")'</code></li>
+            <li>Adjusted terminal settings using <code>stty</code> to enable proper terminal features (autocomplete, history, etc.).</li>
+            <li>Set appropriate environment variables for a fully functional shell experience.</li>
+            <li>Configured shell aliases and improved command history for better usability.</li>
+        </ul>
+    </div>
+
+    <!-- Privilege Escalation -->
+    <div class="card">
+        <h4>Privilege Escalation – Gaining Root Access</h4>
+        <p>The system had a critical misconfiguration that allowed privilege escalation to root:</p>
+        <ul>
+            <li>Checked sudo permissions for the current user using <code>sudo -l</code>.</li>
+            <li>Discovered that the <code>www-data</code> user could execute <code>/bin/bash</code> as root without a password.</li>
+            <li>Exploited this misconfiguration using <code>sudo /bin/bash</code> to spawn a root shell.</li>
+            <li>Gained complete system access with root privileges (UID 0).</li>
+            <li>Verified privilege escalation by executing <code>id</code> and <code>whoami</code> commands.</li>
+        </ul>
+    </div>
+
+    <!-- Flag -->
+    <div class="card">
+        <h4>Capture the Flag – Mission Complete</h4>
+        <p>Successfully located and captured the objective:</p>
+        <ul>
+            <li>Located the flag inside the root directory at <code>/root/flag.txt</code>.</li>
+            <li>Successfully captured the flag: <code>FLAG{SQL1nj3ct10n_RCE_Pr1v_Esc_Pwn3d}</code></li>
+            <li>Documented the complete exploitation chain and vulnerability chain for post-exploitation analysis.</li>
+        </ul>
+    </div>
+
+    <!-- Key Takeaways -->
+    <div class="card">
+        <h4>Key Security Lessons</h4>
+        <ul>
+            <li><strong>Input Validation:</strong> Never trust user input. Always use parameterized queries and prepared statements.</li>
+            <li><strong>File Upload Security:</strong> Implement strict file type validation on both client and server side. Store uploads outside the web root.</li>
+            <li><strong>Principle of Least Privilege:</strong> Web servers should not run as root. Misconfigured sudo permissions are critical vulnerabilities.</li>
+            <li><strong>Defense in Depth:</strong> Single security mechanisms fail. Implement multiple layers of security controls.</li>
+            <li><strong>Regular Audits:</strong> Conduct regular security assessments and penetration tests to identify vulnerabilities before attackers do.</li>
+        </ul>
+    </div>
+
+</section>
+
+<footer>
+    <p>&copy; Cyber Security Portfolio. All rights reserved.</p>
+    <p>Building security one exploit at a time.</p>
+</footer>
+
+</body>
+</html>
+
